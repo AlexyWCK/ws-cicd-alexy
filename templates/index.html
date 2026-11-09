@@ -6,182 +6,150 @@
   <title>Carnet PostgreSQL</title>
   <style>
     :root {
-      color-scheme: dark;
-      --fond: #0f172a;
-      --surface: #1b2336;
-      --surface-2: #272f42;
-      --bord: #475569;
-      --texte: #f8fafc;
-      --discret: #a7b4c6;
-      --accent: #22c55e;
-      --sur-accent: #0f172a;
-      --ok: #4ade80;
-      --attente: #fbbf24;
-      --danger: #fca5a5;
-      --anneau: #ffffff;
-      --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;
-      --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-    }
-    @media (prefers-color-scheme: light) {
-      :root {
-        color-scheme: light;
-        --fond: #f1f5f9;
-        --surface: #ffffff;
-        --surface-2: #e2e8f0;
-        --bord: #94a3b8;
-        --texte: #0f172a;
-        --discret: #475569;
-        --accent: #15803d;
-        --sur-accent: #ffffff;
-        --ok: #166534;
-        --attente: #92400e;
-        --danger: #b91c1c;
-        --anneau: #0f172a;
-      }
+      color-scheme: light;
+      --bleu: #0f6cbd;
+      --bleu-fonce: #115ea3;
+      --bleu-pale: #deecf9;
+      --texte: #323130;
+      --discret: #605e5c;
+      --trait: #edebe9;
+      --trait-champ: #8a8886;
+      --survol: #f3f2f1;
+      --vert: #107c10;
+      --ambre: #835b00;
+      --rouge: #a4262c;
+      --rouge-pale: #fde7e9;
+      --mono: Consolas, "Cascadia Mono", monospace;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--fond);
+      background: #fff;
       color: var(--texte);
-      font: 16px/1.5 var(--sans);
+      font: 14px/20px "Segoe UI", system-ui, -apple-system, sans-serif;
     }
-    .page {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 32px 16px 48px;
+    .barre-haut {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      padding: 0 16px;
+      background: var(--bleu);
+      color: #fff;
+      font-weight: 600;
     }
-    header { margin-bottom: 24px; }
+    main { padding: 16px 24px 40px; }
     h1 {
-      margin: 0 0 4px;
-      font-size: clamp(1.5rem, 4vw, 2.1rem);
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      text-wrap: balance;
+      margin: 0;
+      font-size: 20px;
+      line-height: 28px;
+      font-weight: 600;
     }
-    .intro { margin: 0 0 16px; color: var(--discret); }
-    .etiquettes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .etiquettes li {
-      padding: 4px 10px;
-      border: 1px solid var(--bord);
-      border-radius: 6px;
-      color: var(--discret);
-      font-size: 0.875rem;
+    .type { margin: 0 0 12px; color: var(--discret); font-size: 12px; }
+    .commandes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 2px 0;
+      border-bottom: 1px solid var(--trait);
     }
-    .etiquettes code { color: var(--texte); font-family: var(--mono); }
-    .pastille::before {
+    button {
+      min-height: 32px;
+      padding: 4px 12px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      background: transparent;
+      color: var(--texte);
+      font: inherit;
+      cursor: pointer;
+    }
+    .commandes button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; }
+    .commandes svg { width: 16px; height: 16px; stroke: var(--bleu); fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+    .commandes button:hover:not(:disabled) { background: var(--survol); }
+    .commandes button:disabled { color: #a19f9d; cursor: not-allowed; }
+    .commandes button:disabled svg { stroke: #a19f9d; }
+    button.principal { background: var(--bleu); border-color: var(--bleu); color: #fff; font-weight: 600; }
+    button.principal:hover:not(:disabled) { background: var(--bleu-fonce); border-color: var(--bleu-fonce); }
+    button.principal:disabled { background: var(--survol); border-color: var(--survol); color: #a19f9d; cursor: not-allowed; }
+    :focus-visible { outline: 2px solid var(--texte); outline-offset: 1px; }
+    section { padding: 16px 0; border-bottom: 1px solid var(--trait); }
+    h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+    dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 48px; margin: 0; max-width: 960px; }
+    dl div { display: grid; grid-template-columns: 150px minmax(0, 1fr); }
+    dt { color: var(--discret); }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    dd::before { content: ": "; color: var(--discret); }
+    code { font-family: var(--mono); font-size: 13px; }
+    .pastille::after {
       content: "";
       display: inline-block;
       width: 8px;
       height: 8px;
-      margin-right: 8px;
+      margin-left: 6px;
       border-radius: 50%;
-      background: var(--etat, var(--attente));
+      background: var(--etat, #a19f9d);
     }
-    .disposition {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 320px;
-      gap: 16px;
-      align-items: start;
-    }
-    .colonne { display: grid; gap: 16px; min-width: 0; }
-    .carte {
-      background: var(--surface);
-      border: 1px solid var(--bord);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    h2 { margin: 0 0 12px; font-size: 1.05rem; }
-    label.champ { display: grid; gap: 4px; font-size: 0.875rem; color: var(--discret); min-width: 0; }
+    label.champ { display: grid; gap: 2px; font-weight: 600; min-width: 0; }
     input[type="text"], input[type="search"], select {
       width: 100%;
-      min-height: 44px;
-      padding: 8px 10px;
-      border: 1px solid var(--bord);
-      border-radius: 6px;
-      background: var(--fond);
+      height: 32px;
+      padding: 4px 8px;
+      border: 1px solid var(--trait-champ);
+      border-radius: 2px;
+      background: #fff;
       color: var(--texte);
-      font: inherit;
+      font: 14px/20px "Segoe UI", system-ui, sans-serif;
+      font-weight: 400;
     }
-    button {
-      min-height: 44px;
-      padding: 8px 14px;
-      border: 1px solid var(--bord);
-      border-radius: 6px;
-      background: var(--surface-2);
-      color: var(--texte);
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      transition: filter 150ms ease, opacity 150ms ease;
-    }
-    button:hover:not(:disabled) { filter: brightness(1.15); }
-    button:active:not(:disabled) { filter: brightness(0.92); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    button.principal { background: var(--accent); border-color: var(--accent); color: var(--sur-accent); }
-    button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
-    :focus-visible { outline: 2px solid var(--anneau); outline-offset: 2px; }
-    .ligne-ajout { display: grid; grid-template-columns: minmax(0, 1fr) 170px auto; gap: 8px; align-items: end; }
-    .erreur { margin: 8px 0 0; color: var(--danger); font-size: 0.875rem; min-height: 1.3em; }
-    .filtres { display: grid; grid-template-columns: minmax(0, 1fr) 170px 170px; gap: 8px; margin-bottom: 12px; }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--bord);
-    }
-    .actions .compte { margin-right: auto; color: var(--discret); font-size: 0.875rem; }
+    input:hover, select:hover { border-color: var(--texte); }
+    .ligne-ajout, .filtres { display: grid; gap: 12px; max-width: 960px; }
+    .ligne-ajout { grid-template-columns: minmax(0, 1fr) 180px auto; align-items: end; }
+    .filtres { grid-template-columns: minmax(0, 1fr) 180px 180px; margin-bottom: 12px; }
+    .erreur { margin: 4px 0 0; color: var(--rouge); font-size: 12px; min-height: 16px; }
+    .avis { margin: 0 0 12px; padding: 8px 12px; background: var(--rouge-pale); color: var(--texte); }
+    .avis[hidden], .vide[hidden] { display: none; }
+    .compte { margin: 0 0 4px; color: var(--discret); font-size: 12px; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--surface-2); vertical-align: middle; }
-    th { color: var(--discret); font-size: 0.8125rem; font-weight: 600; font-family: var(--mono); }
-    tbody tr:last-child td { border-bottom: 0; }
-    tbody tr.selection { background: var(--surface-2); }
-    td.id, td.date { font-family: var(--mono); font-size: 0.875rem; color: var(--discret); white-space: nowrap; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--trait); vertical-align: middle; }
+    th { font-weight: 600; white-space: nowrap; }
+    tbody tr:hover { background: var(--survol); }
+    tbody tr.selection { background: var(--bleu-pale); }
     td.titre { overflow-wrap: anywhere; }
-    tr.termine td.titre { color: var(--discret); text-decoration: line-through; }
-    .coche { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -6px; cursor: pointer; }
-    .coche input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-    .statut { font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
-    .statut.fait { color: var(--ok); }
-    .statut.attente { color: var(--attente); }
-    .vide { padding: 32px 16px; text-align: center; color: var(--discret); }
-    .avis { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--danger); border-radius: 6px; color: var(--danger); }
-    .avis[hidden] { display: none; }
-    dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 0.875rem; }
-    dt { color: var(--discret); }
-    dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; text-align: right; }
+    td.id, td.date { white-space: nowrap; }
+    th.choix-t, td.choix { width: 36px; padding: 0 0 0 4px; }
+    .coche { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; cursor: pointer; }
+    .coche input { width: 16px; height: 16px; margin: 0; accent-color: var(--bleu); cursor: pointer; }
+    .statut.fait { color: var(--vert); }
+    .statut.attente { color: var(--ambre); }
+    .vide { padding: 24px 8px; color: var(--discret); text-align: center; margin: 0; }
+    details { padding-top: 12px; }
+    summary { cursor: pointer; color: var(--bleu); }
     pre {
       margin: 8px 0 0;
-      padding: 10px;
-      border-radius: 6px;
-      background: var(--fond);
-      color: var(--texte);
-      font: 0.8125rem/1.5 var(--mono);
+      padding: 8px 12px;
+      max-width: 960px;
+      background: var(--survol);
+      font: 13px/18px var(--mono);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
-    h3 { margin: 16px 0 0; font-size: 0.875rem; color: var(--discret); font-weight: 600; }
-    .largeur { width: 100%; margin-top: 12px; }
     .annonce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-    @media (max-width: 880px) {
-      .disposition { grid-template-columns: minmax(0, 1fr); }
+    @media (pointer: coarse) {
+      button, input[type="text"], input[type="search"], select { min-height: 44px; }
+      .coche { width: 44px; height: 44px; }
     }
-    @media (max-width: 640px) {
-      .ligne-ajout, .filtres { grid-template-columns: minmax(0, 1fr); }
+    @media (max-width: 720px) {
+      main { padding: 12px 16px 32px; }
+      dl, .ligne-ajout, .filtres { grid-template-columns: minmax(0, 1fr); }
+      dl div { grid-template-columns: 130px minmax(0, 1fr); }
       thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
       table, tbody, tr, td { display: block; }
-      tr { position: relative; padding: 10px 44px 10px 0; border-bottom: 1px solid var(--bord); }
-      tbody tr:last-child { border-bottom: 0; }
-      td { padding: 2px 0; border: 0; }
-      td.choix { position: absolute; top: 8px; right: 6px; padding: 0; }
+      tr { position: relative; padding: 8px 44px 8px 0; border-bottom: 1px solid var(--trait); }
+      td { padding: 1px 0; border: 0; }
+      td.titre { font-weight: 600; }
+      td.choix { position: absolute; top: 4px; right: 0; width: auto; padding: 0; }
       td.id::before, td.categorie::before, td.etat::before, td.date::before {
         content: attr(data-libelle) " : ";
         color: var(--discret);
-        font-family: var(--sans);
-        font-size: 0.8125rem;
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -190,96 +158,92 @@
   </style>
 </head>
 <body>
-  <main class="page">
-    <header>
-      <h1>{{ message }}</h1>
-      <p class="intro">Ce carnet lit et écrit directement dans la base PostgreSQL. Ce que tu enregistres reste après un redéploiement du conteneur.</p>
-      <ul class="etiquettes">
-        <li>Version : <code>{{ version }}</code></li>
-        <li>Conteneur : <code>{{ conteneur }}</code></li>
-        <li class="pastille" id="pastille">Base : connexion…</li>
-      </ul>
-    </header>
+  <div class="barre-haut">Carnet PostgreSQL</div>
+  <main>
+    <h1>{{ message }}</h1>
+    <p class="type">Application web conteneurisée</p>
 
-    <div class="disposition">
-      <div class="colonne">
-        <section class="carte" aria-labelledby="titre-ajout">
-          <h2 id="titre-ajout">Enregistrer un élément</h2>
-          <form id="formulaire" novalidate>
-            <div class="ligne-ajout">
-              <label class="champ">Titre
-                <input type="text" id="titre" maxlength="{{ titre_max }}" autocomplete="off" aria-describedby="erreur-ajout" required>
-              </label>
-              <label class="champ">Catégorie
-                <select id="categorie">
-                  {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
-                </select>
-              </label>
-              <button type="submit" class="principal" id="enregistrer">Enregistrer</button>
-            </div>
-            <p class="erreur" id="erreur-ajout" role="alert"></p>
-          </form>
-        </section>
+    <div class="commandes" role="toolbar" aria-label="Actions">
+      <button type="button" id="actualiser"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3"/></svg>Actualiser</button>
+      <button type="button" id="marquer-fait" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 4.8"/></svg>Marquer terminé</button>
+      <button type="button" id="marquer-a-faire" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 2.5 2 5.5l3 3M2 5.5h7.5a4 4 0 0 1 0 8H6"/></svg>Remettre à faire</button>
+      <button type="button" id="supprimer" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4"/></svg>Supprimer</button>
+    </div>
 
-        <section class="carte" aria-labelledby="titre-table">
-          <h2 id="titre-table">Table <code>elements</code></h2>
-          <p class="avis" id="avis" hidden></p>
-          <div class="filtres">
-            <label class="champ">Rechercher
-              <input type="search" id="recherche" autocomplete="off">
-            </label>
-            <label class="champ">Catégorie
-              <select id="filtre-categorie">
-                <option value="">Toutes</option>
-                {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
-              </select>
-            </label>
-            <label class="champ">Statut
-              <select id="filtre-statut">
-                <option value="">Tous</option>
-                <option value="a_faire">À faire</option>
-                <option value="fait">Terminé</option>
-              </select>
-            </label>
-          </div>
+    <section aria-labelledby="titre-bases">
+      <h2 id="titre-bases">Bases</h2>
+      <dl>
+        <div><dt>État de la base</dt><dd class="pastille" id="pastille">Connexion…</dd></div>
+        <div><dt>Base</dt><dd id="info-base">–</dd></div>
+        <div><dt>Version de l'application</dt><dd><code>{{ version }}</code></dd></div>
+        <div><dt>Version PostgreSQL</dt><dd id="info-version">–</dd></div>
+        <div><dt>Conteneur</dt><dd><code>{{ conteneur }}</code></dd></div>
+        <div><dt>Lignes</dt><dd id="info-total">–</dd></div>
+        <div><dt>Table</dt><dd><code>elements</code></dd></div>
+        <div><dt>Heure du serveur</dt><dd id="info-heure">–</dd></div>
+      </dl>
+    </section>
 
-          <div class="actions">
-            <span class="compte" id="compte">0 sélectionné</span>
-            <button type="button" id="marquer-fait" disabled>Marquer terminé</button>
-            <button type="button" id="marquer-a-faire" disabled>Remettre à faire</button>
-            <button type="button" id="supprimer" class="danger" disabled>Supprimer</button>
-          </div>
+    <section aria-labelledby="titre-ajout">
+      <h2 id="titre-ajout">Ajouter un élément</h2>
+      <form id="formulaire" novalidate>
+        <div class="ligne-ajout">
+          <label class="champ">Titre
+            <input type="text" id="titre" maxlength="{{ titre_max }}" autocomplete="off" aria-describedby="erreur-ajout" required>
+          </label>
+          <label class="champ">Catégorie
+            <select id="categorie">
+              {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
+            </select>
+          </label>
+          <button type="submit" class="principal" id="enregistrer">Enregistrer</button>
+        </div>
+        <p class="erreur" id="erreur-ajout" role="alert"></p>
+      </form>
+    </section>
 
-          <table>
-            <thead>
-              <tr>
-                <th scope="col"><label class="coche"><input type="checkbox" id="tout" aria-label="Tout sélectionner"></label></th>
-                <th scope="col">id</th>
-                <th scope="col">titre</th>
-                <th scope="col">categorie</th>
-                <th scope="col">statut</th>
-                <th scope="col">cree_le</th>
-              </tr>
-            </thead>
-            <tbody id="lignes"></tbody>
-          </table>
-          <p class="vide" id="vide" hidden></p>
-        </section>
+    <section aria-labelledby="titre-table">
+      <h2 id="titre-table">Éléments</h2>
+      <p class="avis" id="avis" hidden></p>
+      <div class="filtres">
+        <label class="champ">Rechercher
+          <input type="search" id="recherche" autocomplete="off">
+        </label>
+        <label class="champ">Catégorie
+          <select id="filtre-categorie">
+            <option value="">Toutes</option>
+            {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="champ">Statut
+          <select id="filtre-statut">
+            <option value="">Tous</option>
+            <option value="a_faire">À faire</option>
+            <option value="fait">Terminé</option>
+          </select>
+        </label>
       </div>
 
-      <aside class="carte" aria-labelledby="titre-preuve">
-        <h2 id="titre-preuve">Preuve côté PostgreSQL</h2>
-        <dl>
-          <dt>Base</dt><dd id="info-base">–</dd>
-          <dt>Version</dt><dd id="info-version">–</dd>
-          <dt>Lignes</dt><dd id="info-total">–</dd>
-          <dt>Heure serveur</dt><dd id="info-heure">–</dd>
-        </dl>
-        <h3>Dernière requête SQL</h3>
+      <p class="compte" id="compte">0 sélectionné</p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" class="choix-t"><label class="coche"><input type="checkbox" id="tout" aria-label="Tout sélectionner"></label></th>
+            <th scope="col">ID</th>
+            <th scope="col">Titre</th>
+            <th scope="col">Catégorie</th>
+            <th scope="col">Statut</th>
+            <th scope="col">Créé le</th>
+          </tr>
+        </thead>
+        <tbody id="lignes"></tbody>
+      </table>
+      <p class="vide" id="vide" hidden></p>
+      <details>
+        <summary>Dernière requête SQL</summary>
         <pre id="info-sql">–</pre>
-        <button type="button" id="actualiser" class="largeur">Relire la base</button>
-      </aside>
-    </div>
+      </details>
+    </section>
     <p class="annonce" id="annonce" aria-live="polite"></p>
   </main>
 
@@ -315,7 +279,7 @@
       function annoncer(texte) { $("annonce").textContent = texte; }
 
       function etatBase(enLigne, texte) {
-        $("pastille").style.setProperty("--etat", enLigne ? "var(--ok)" : "var(--danger)");
+        $("pastille").style.setProperty("--etat", enLigne ? "var(--vert)" : "var(--rouge)");
         $("pastille").textContent = texte;
       }
 
@@ -361,7 +325,7 @@
           etiquette.append(case_);
           choix.append(etiquette);
 
-          const etat = cellule("etat", "statut");
+          const etat = cellule("etat", "Statut");
           const marque = document.createElement("span");
           marque.className = "statut " + (element.fait ? "fait" : "attente");
           marque.textContent = element.fait ? "Terminé" : "À faire";
@@ -369,11 +333,11 @@
 
           ligne.append(
             choix,
-            cellule("id", "id", element.id),
+            cellule("id", "ID", element.id),
             cellule("titre", "", element.titre),
-            cellule("categorie", "categorie", element.categorie),
+            cellule("categorie", "Catégorie", element.categorie),
             etat,
-            cellule("date", "cree_le", date.format(new Date(element.cree_le)))
+            cellule("date", "Créé le", date.format(new Date(element.cree_le)))
           );
           corps.append(ligne);
         });
@@ -399,7 +363,7 @@
           afficher();
           majSelection();
           $("avis").hidden = true;
-          etatBase(true, "Base : connectée");
+          etatBase(true, "Connectée");
           $("info-base").textContent = d.base;
           $("info-version").textContent = d.version;
           $("info-total").textContent = d.total + " / " + d.total_max;
@@ -413,8 +377,8 @@
             : "La table est vide. Enregistre un premier élément avec le formulaire.";
         } catch (erreur) {
           if (numero !== numeroRequete) return;
-          etatBase(false, "Base : indisponible");
-          $("avis").textContent = erreur.message + " L'application reste en ligne, réessaie avec « Relire la base ».";
+          etatBase(false, "Indisponible");
+          $("avis").textContent = erreur.message + " L'application reste en ligne, réessaie avec « Actualiser ».";
           $("avis").hidden = false;
         }
       }
