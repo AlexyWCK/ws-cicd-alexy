@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carnet PostgreSQL</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --fond: #0f172a;
+      --surface: #1b2336;
+      --surface-2: #272f42;
+      --bord: #475569;
+      --texte: #f8fafc;
+      --discret: #a7b4c6;
+      --accent: #22c55e;
+      --sur-accent: #0f172a;
+      --ok: #4ade80;
+      --attente: #fbbf24;
+      --danger: #fca5a5;
+      --anneau: #ffffff;
+      --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+      --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        color-scheme: light;
+        --fond: #f1f5f9;
+        --surface: #ffffff;
+        --surface-2: #e2e8f0;
+        --bord: #94a3b8;
+        --texte: #0f172a;
+        --discret: #475569;
+        --accent: #15803d;
+        --sur-accent: #ffffff;
+        --ok: #166534;
+        --attente: #92400e;
+        --danger: #b91c1c;
+        --anneau: #0f172a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--fond);
+      color: var(--texte);
+      font: 16px/1.5 var(--sans);
+    }
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+    header { margin-bottom: 24px; }
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      text-wrap: balance;
+    }
+    .intro { margin: 0 0 16px; color: var(--discret); }
+    .etiquettes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .etiquettes li {
+      padding: 4px 10px;
+      border: 1px solid var(--bord);
+      border-radius: 6px;
+      color: var(--discret);
+      font-size: 0.875rem;
+    }
+    .etiquettes code { color: var(--texte); font-family: var(--mono); }
+    .pastille::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--etat, var(--attente));
+    }
+    .disposition {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+    .colonne { display: grid; gap: 16px; min-width: 0; }
+    .carte {
+      background: var(--surface);
+      border: 1px solid var(--bord);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    h2 { margin: 0 0 12px; font-size: 1.05rem; }
+    label.champ { display: grid; gap: 4px; font-size: 0.875rem; color: var(--discret); min-width: 0; }
+    input[type="text"], input[type="search"], select {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--bord);
+      border-radius: 6px;
+      background: var(--fond);
+      color: var(--texte);
+      font: inherit;
+    }
+    button {
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid var(--bord);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--texte);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 150ms ease, opacity 150ms ease;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.15); }
+    button:active:not(:disabled) { filter: brightness(0.92); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.principal { background: var(--accent); border-color: var(--accent); color: var(--sur-accent); }
+    button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+    :focus-visible { outline: 2px solid var(--anneau); outline-offset: 2px; }
+    .ligne-ajout { display: grid; grid-template-columns: minmax(0, 1fr) 170px auto; gap: 8px; align-items: end; }
+    .erreur { margin: 8px 0 0; color: var(--danger); font-size: 0.875rem; min-height: 1.3em; }
+    .filtres { display: grid; grid-template-columns: minmax(0, 1fr) 170px 170px; gap: 8px; margin-bottom: 12px; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bord);
+    }
+    .actions .compte { margin-right: auto; color: var(--discret); font-size: 0.875rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--surface-2); vertical-align: middle; }
+    th { color: var(--discret); font-size: 0.8125rem; font-weight: 600; font-family: var(--mono); }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.selection { background: var(--surface-2); }
+    td.id, td.date { font-family: var(--mono); font-size: 0.875rem; color: var(--discret); white-space: nowrap; }
+    td.titre { overflow-wrap: anywhere; }
+    tr.termine td.titre { color: var(--discret); text-decoration: line-through; }
+    .coche { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -6px; cursor: pointer; }
+    .coche input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+    .statut { font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
+    .statut.fait { color: var(--ok); }
+    .statut.attente { color: var(--attente); }
+    .vide { padding: 32px 16px; text-align: center; color: var(--discret); }
+    .avis { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--danger); border-radius: 6px; color: var(--danger); }
+    .avis[hidden] { display: none; }
+    dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 0.875rem; }
+    dt { color: var(--discret); }
+    dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; text-align: right; }
+    pre {
+      margin: 8px 0 0;
+      padding: 10px;
+      border-radius: 6px;
+      background: var(--fond);
+      color: var(--texte);
+      font: 0.8125rem/1.5 var(--mono);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    h3 { margin: 16px 0 0; font-size: 0.875rem; color: var(--discret); font-weight: 600; }
+    .largeur { width: 100%; margin-top: 12px; }
+    .annonce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    @media (max-width: 880px) {
+      .disposition { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .ligne-ajout, .filtres { grid-template-columns: minmax(0, 1fr); }
+      thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+      table, tbody, tr, td { display: block; }
+      tr { position: relative; padding: 10px 44px 10px 0; border-bottom: 1px solid var(--bord); }
+      tbody tr:last-child { border-bottom: 0; }
+      td { padding: 2px 0; border: 0; }
+      td.choix { position: absolute; top: 8px; right: 6px; padding: 0; }
+      td.id::before, td.categorie::before, td.etat::before, td.date::before {
+        content: attr(data-libelle) " : ";
+        color: var(--discret);
+        font-family: var(--sans);
+        font-size: 0.8125rem;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>{{ message }}</h1>
+      <p class="intro">Ce carnet lit et écrit directement dans la base PostgreSQL. Ce que tu enregistres reste après un redéploiement du conteneur.</p>
+      <ul class="etiquettes">
+        <li>Version : <code>{{ version }}</code></li>
+        <li>Conteneur : <code>{{ conteneur }}</code></li>
+        <li class="pastille" id="pastille">Base : connexion…</li>
+      </ul>
+    </header>
+
+    <div class="disposition">
+      <div class="colonne">
+        <section class="carte" aria-labelledby="titre-ajout">
+          <h2 id="titre-ajout">Enregistrer un élément</h2>
+          <form id="formulaire" novalidate>
+            <div class="ligne-ajout">
+              <label class="champ">Titre
+                <input type="text" id="titre" maxlength="{{ titre_max }}" autocomplete="off" aria-describedby="erreur-ajout" required>
+              </label>
+              <label class="champ">Catégorie
+                <select id="categorie">
+                  {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
+                </select>
+              </label>
+              <button type="submit" class="principal" id="enregistrer">Enregistrer</button>
+            </div>
+            <p class="erreur" id="erreur-ajout" role="alert"></p>
+          </form>
+        </section>
+
+        <section class="carte" aria-labelledby="titre-table">
+          <h2 id="titre-table">Table <code>elements</code></h2>
+          <p class="avis" id="avis" hidden></p>
+          <div class="filtres">
+            <label class="champ">Rechercher
+              <input type="search" id="recherche" autocomplete="off">
+            </label>
+            <label class="champ">Catégorie
+              <select id="filtre-categorie">
+                <option value="">Toutes</option>
+                {% for categorie in categories %}<option>{{ categorie }}</option>{% endfor %}
+              </select>
+            </label>
+            <label class="champ">Statut
+              <select id="filtre-statut">
+                <option value="">Tous</option>
+                <option value="a_faire">À faire</option>
+                <option value="fait">Terminé</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="actions">
+            <span class="compte" id="compte">0 sélectionné</span>
+            <button type="button" id="marquer-fait" disabled>Marquer terminé</button>
+            <button type="button" id="marquer-a-faire" disabled>Remettre à faire</button>
+            <button type="button" id="supprimer" class="danger" disabled>Supprimer</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><label class="coche"><input type="checkbox" id="tout" aria-label="Tout sélectionner"></label></th>
+                <th scope="col">id</th>
+                <th scope="col">titre</th>
+                <th scope="col">categorie</th>
+                <th scope="col">statut</th>
+                <th scope="col">cree_le</th>
+              </tr>
+            </thead>
+            <tbody id="lignes"></tbody>
+          </table>
+          <p class="vide" id="vide" hidden></p>
+        </section>
+      </div>
+
+      <aside class="carte" aria-labelledby="titre-preuve">
+        <h2 id="titre-preuve">Preuve côté PostgreSQL</h2>
+        <dl>
+          <dt>Base</dt><dd id="info-base">–</dd>
+          <dt>Version</dt><dd id="info-version">–</dd>
+          <dt>Lignes</dt><dd id="info-total">–</dd>
+          <dt>Heure serveur</dt><dd id="info-heure">–</dd>
+        </dl>
+        <h3>Dernière requête SQL</h3>
+        <pre id="info-sql">–</pre>
+        <button type="button" id="actualiser" class="largeur">Relire la base</button>
+      </aside>
+    </div>
+    <p class="annonce" id="annonce" aria-live="polite"></p>
+  </main>
+
+  <script>
+    (function () {
+      const $ = (id) => document.getElementById(id);
+      const selection = new Set();
+      let elements = [];
+      let numeroRequete = 0;
+      let minuterie;
+      let derniereEcriture = null;
+
+      const date = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "medium", timeZone: "Europe/Paris" });
+
+      async function api(methode, corps, parametres) {
+        const url = "/api/elements" + (parametres ? "?" + parametres : "");
+        const options = { method: methode, cache: "no-store" };
+        if (corps) {
+          options.headers = { "Content-Type": "application/json" };
+          options.body = JSON.stringify(corps);
+        }
+        let reponse;
+        try {
+          reponse = await fetch(url, options);
+        } catch (erreur) {
+          throw new Error("Le serveur ne répond pas.");
+        }
+        const donnees = await reponse.json().catch(() => ({}));
+        if (!reponse.ok) throw new Error(donnees.message || "Une erreur est survenue.");
+        return donnees;
+      }
+
+      function annoncer(texte) { $("annonce").textContent = texte; }
+
+      function etatBase(enLigne, texte) {
+        $("pastille").style.setProperty("--etat", enLigne ? "var(--ok)" : "var(--danger)");
+        $("pastille").textContent = texte;
+      }
+
+      function cellule(classe, libelle, contenu) {
+        const td = document.createElement("td");
+        td.className = classe;
+        if (libelle) td.dataset.libelle = libelle;
+        if (contenu !== undefined) td.textContent = contenu;
+        return td;
+      }
+
+      function majSelection() {
+        const n = selection.size;
+        $("compte").textContent = n + (n > 1 ? " sélectionnés" : " sélectionné");
+        ["marquer-fait", "marquer-a-faire", "supprimer"].forEach((id) => { $(id).disabled = n === 0; });
+        const tout = $("tout");
+        tout.checked = elements.length > 0 && n === elements.length;
+        tout.indeterminate = n > 0 && n < elements.length;
+        document.querySelectorAll("#lignes tr").forEach((ligne) => {
+          ligne.classList.toggle("selection", selection.has(Number(ligne.dataset.id)));
+        });
+      }
+
+      function afficher() {
+        const corps = $("lignes");
+        corps.replaceChildren();
+        elements.forEach((element) => {
+          const ligne = document.createElement("tr");
+          ligne.dataset.id = element.id;
+          if (element.fait) ligne.classList.add("termine");
+
+          const choix = cellule("choix");
+          const etiquette = document.createElement("label");
+          etiquette.className = "coche";
+          const case_ = document.createElement("input");
+          case_.type = "checkbox";
+          case_.checked = selection.has(element.id);
+          case_.setAttribute("aria-label", "Sélectionner : " + element.titre);
+          case_.addEventListener("change", () => {
+            if (case_.checked) selection.add(element.id); else selection.delete(element.id);
+            majSelection();
+          });
+          etiquette.append(case_);
+          choix.append(etiquette);
+
+          const etat = cellule("etat", "statut");
+          const marque = document.createElement("span");
+          marque.className = "statut " + (element.fait ? "fait" : "attente");
+          marque.textContent = element.fait ? "Terminé" : "À faire";
+          etat.append(marque);
+
+          ligne.append(
+            choix,
+            cellule("id", "id", element.id),
+            cellule("titre", "", element.titre),
+            cellule("categorie", "categorie", element.categorie),
+            etat,
+            cellule("date", "cree_le", date.format(new Date(element.cree_le)))
+          );
+          corps.append(ligne);
+        });
+      }
+
+      function parametresFiltres() {
+        const p = new URLSearchParams();
+        const q = $("recherche").value.trim();
+        if (q) p.set("q", q);
+        if ($("filtre-categorie").value) p.set("categorie", $("filtre-categorie").value);
+        if ($("filtre-statut").value) p.set("statut", $("filtre-statut").value);
+        return p.toString();
+      }
+
+      async function charger() {
+        const numero = ++numeroRequete;
+        try {
+          const d = await api("GET", null, parametresFiltres());
+          if (numero !== numeroRequete) return;
+          elements = d.elements;
+          const visibles = new Set(elements.map((e) => e.id));
+          selection.forEach((id) => { if (!visibles.has(id)) selection.delete(id); });
+          afficher();
+          majSelection();
+          $("avis").hidden = true;
+          etatBase(true, "Base : connectée");
+          $("info-base").textContent = d.base;
+          $("info-version").textContent = d.version;
+          $("info-total").textContent = d.total + " / " + d.total_max;
+          $("info-heure").textContent = date.format(new Date(d.heure));
+          $("info-sql").textContent = derniereEcriture || d.sql;
+          derniereEcriture = null;
+          const filtre = Boolean(parametresFiltres());
+          $("vide").hidden = elements.length > 0;
+          $("vide").textContent = filtre
+            ? "Aucun élément ne correspond à ces filtres."
+            : "La table est vide. Enregistre un premier élément avec le formulaire.";
+        } catch (erreur) {
+          if (numero !== numeroRequete) return;
+          etatBase(false, "Base : indisponible");
+          $("avis").textContent = erreur.message + " L'application reste en ligne, réessaie avec « Relire la base ».";
+          $("avis").hidden = false;
+        }
+      }
+
+      async function modifier(boutons, action, message) {
+        boutons.forEach((b) => { b.disabled = true; });
+        try {
+          const d = await action();
+          derniereEcriture = d.sql;
+          annoncer(message(d));
+          await charger();
+          return true;
+        } catch (erreur) {
+          $("avis").textContent = erreur.message;
+          $("avis").hidden = false;
+          majSelection();
+          return false;
+        }
+      }
+
+      $("formulaire").addEventListener("submit", async (evenement) => {
+        evenement.preventDefault();
+        const titre = $("titre").value.trim();
+        $("erreur-ajout").textContent = "";
+        if (!titre) {
+          $("erreur-ajout").textContent = "Saisis un titre.";
+          $("titre").focus();
+          return;
+        }
+        const bouton = $("enregistrer");
+        bouton.disabled = true;
+        bouton.textContent = "Enregistrement…";
+        try {
+          const d = await api("POST", { titre, categorie: $("categorie").value });
+          derniereEcriture = d.sql;
+          $("titre").value = "";
+          annoncer("Élément enregistré en base.");
+          await charger();
+          $("titre").focus();
+        } catch (erreur) {
+          $("erreur-ajout").textContent = erreur.message;
+        } finally {
+          bouton.disabled = false;
+          bouton.textContent = "Enregistrer";
+        }
+      });
+
+      function changerStatut(fait) {
+        const ids = [...selection];
+        modifier(
+          [$("marquer-fait"), $("marquer-a-faire"), $("supprimer")],
+          () => api("PATCH", { ids, fait }),
+          (d) => d.lignes + " ligne(s) mise(s) à jour."
+        );
+      }
+
+      $("marquer-fait").addEventListener("click", () => changerStatut(true));
+      $("marquer-a-faire").addEventListener("click", () => changerStatut(false));
+
+      $("supprimer").addEventListener("click", () => {
+        const ids = [...selection];
+        if (!window.confirm("Supprimer définitivement " + ids.length + " élément(s) de la base ?")) return;
+        modifier(
+          [$("marquer-fait"), $("marquer-a-faire"), $("supprimer")],
+          () => api("DELETE", { ids }),
+          (d) => d.lignes + " ligne(s) supprimée(s)."
+        );
+      });
+
+      $("tout").addEventListener("change", (evenement) => {
+        selection.clear();
+        if (evenement.target.checked) elements.forEach((e) => selection.add(e.id));
+        afficher();
+        majSelection();
+      });
+
+      $("recherche").addEventListener("input", () => {
+        clearTimeout(minuterie);
+        minuterie = setTimeout(charger, 250);
+      });
+      $("filtre-categorie").addEventListener("change", charger);
+      $("filtre-statut").addEventListener("change", charger);
+      $("actualiser").addEventListener("click", charger);
+
+      charger();
+    })();
+  </script>
+</body>
+</html>

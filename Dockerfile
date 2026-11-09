@@ -9,6 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
+COPY templates templates
 
 # Valeur fournie au build (ARG) et conservée à l'exécution (ENV)
 ARG APP_VERSION=dev
