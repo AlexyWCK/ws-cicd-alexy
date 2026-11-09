@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 app = Flask(__name__)
 
 # Message affiché sur la page d'accueil : à modifier pendant le workshop
-MESSAGE = "Bonjour depuis mon pipeline CI/CD !"
+MESSAGE = "Bonjour depuis mon pipeline CI/CD ! Super TP !"
 # Version injectée au build (SHA du commit en CI, "dev" par défaut)
 VERSION = os.getenv("APP_VERSION", "dev")
 
