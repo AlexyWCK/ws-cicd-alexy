@@ -1,6 +1,7 @@
 import os
 import socket
 
+import psycopg
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -23,6 +24,27 @@ def index():
 @app.route("/health")
 def health():
     return jsonify(status="ok", version=VERSION)
+
+
+@app.route("/db")
+def db():
+    try:
+        with psycopg.connect(
+            host=os.environ["DB_HOST"],
+            dbname=os.environ["DB_NAME"],
+            user=os.environ["DB_USER"],
+            password=os.environ["DB_PASSWORD"],
+            sslmode="require",
+            connect_timeout=5,
+        ) as conn:
+            base, version = conn.execute(
+                "SELECT current_database(), version()"
+            ).fetchone()
+    except (KeyError, psycopg.Error):
+        # Le détail reste dans les journaux, jamais dans la réponse publique
+        app.logger.exception("Connexion à PostgreSQL impossible")
+        return jsonify(status="error"), 503
+    return jsonify(status="ok", database=base, server=version)
 
 
 if __name__ == "__main__":
