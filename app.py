@@ -3,22 +3,24 @@ import socket
 
 from flask import Flask, jsonify
 
-MESSAGE = "Bonjour depuis le workshop CI/CD !"
-VERSION = os.environ.get("APP_VERSION", "dev")
-
 app = Flask(__name__)
 
+# Message affiché sur la page d'accueil : à modifier pendant le workshop
+MESSAGE = "Bonjour depuis mon pipeline CI/CD !"
+# Version injectée au build (SHA du commit en CI, "dev" par défaut)
+VERSION = os.getenv("APP_VERSION", "dev")
 
-@app.get("/")
+
+@app.route("/")
 def index():
     return (
-        "<h1>{}</h1>"
-        "<p>Version : <strong>{}</strong></p>"
-        "<p>Conteneur : <code>{}</code></p>"
-    ).format(MESSAGE, VERSION, socket.gethostname())
+        f"<h1>{MESSAGE}</h1>"
+        f"<p>Version : <code>{VERSION[:7]}</code></p>"
+        f"<p>Conteneur : <code>{socket.gethostname()}</code></p>"
+    )
 
 
-@app.get("/health")
+@app.route("/health")
 def health():
     return jsonify(status="ok", version=VERSION)
 

@@ -1,22 +1,38 @@
-name: CI/CD
+name: CI-CD
 
-# TODO 1 : remplacer ce déclencheur manuel par un déclencheur sur la branche main
+# TODO 1 : déclencher aussi le workflow à chaque push sur la branche main
 on:
   workflow_dispatch:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # TODO 2 : permissions du job
+    # TODO 2 : donner à ce job les permissions "contents: read" et "packages: write"
     steps:
-      - uses: actions/checkout@v4
-      # TODO 3 : connexion à ghcr.io
-      # TODO 4 : construction et publication de l'image
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Nom d'image en minuscules
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      # TODO 3 : se connecter à ghcr.io avec docker/login-action@v3
+      #          (utilisateur : github.actor ; mot de passe : secrets.GITHUB_TOKEN)
+
+      # TODO 4 : construire et publier l'image avec docker/build-push-action@v6
+      #          - tags : <IMAGE>:<SHA du commit> et <IMAGE>:latest
+      #          - argument de build APP_VERSION = SHA du commit
 
   deploy:
+    # TODO 5 : ne lancer ce job qu'après la réussite du job build-and-push
     runs-on: ubuntu-latest
-    # TODO 5 : dépendance entre les jobs
     steps:
-      - run: echo "Déploiement à compléter"
-      # TODO 6 : préparation de SSH
-      # TODO 7 : commande de déploiement (docker pull, suppression de l'ancien conteneur, docker run)
+      - name: Nom d'image en minuscules
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      # TODO 6 : préparer la connexion SSH
+      #          - écrire la clé du secret SSH_KEY dans ~/.ssh/id_deploy (droits 600)
+      #          - ajouter l'hôte à known_hosts avec ssh-keyscan
+
+      # TODO 7 : se connecter à la VM (secrets SSH_USER et SSH_HOST) et y exécuter :
+      #          docker pull, suppression de l'ancien conteneur "webapp",
+      #          docker run -d --name webapp --restart unless-stopped -p 80:5000 <image>:<sha>

@@ -1,6 +1,7 @@
 FROM python:3.12-slim
 
-# TODO : label reliant l'image au dépôt GitHub (org.opencontainers.image.source)
+# TODO 1 : ajouter le label org.opencontainers.image.source qui relie l'image à votre dépôt GitHub
+#          (valeur : https://github.com/<utilisateur>/ws-cicd-<prenom>)
 
 WORKDIR /app
 
@@ -9,10 +10,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-# TODO : argument de build APP_VERSION transmis à l'application
+# TODO 2 : déclarer l'argument APP_VERSION (valeur par défaut : dev)
+#          et l'exposer dans une variable d'environnement du même nom
 
-# TODO : créer un utilisateur non-root et l'utiliser
+# TODO 3 : créer un utilisateur non-root et l'utiliser pour lancer l'application
 
 EXPOSE 5000
-
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

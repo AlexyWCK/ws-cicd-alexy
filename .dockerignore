@@ -1,10 +1,8 @@
 .git
 .github
 .gitignore
-.dockerignore
-Dockerfile
-README.md
 __pycache__/
 *.pyc
-.venv/
 .env
+*.pem
+README.md
