@@ -1,0 +1,22 @@
+name: CI/CD
+
+# TODO 1 : remplacer ce déclencheur manuel par un déclencheur sur la branche main
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    # TODO 2 : permissions du job
+    steps:
+      - uses: actions/checkout@v4
+      # TODO 3 : connexion à ghcr.io
+      # TODO 4 : construction et publication de l'image
+
+  deploy:
+    runs-on: ubuntu-latest
+    # TODO 5 : dépendance entre les jobs
+    steps:
+      - run: echo "Déploiement à compléter"
+      # TODO 6 : préparation de SSH
+      # TODO 7 : commande de déploiement (docker pull, suppression de l'ancien conteneur, docker run)
