@@ -62,12 +62,11 @@ jobs:
             docker run -d --name webapp --restart unless-stopped -p 80:5000 $IMAGE:$GITHUB_SHA
           "
 
-      # Exercice 6.5 : sélectionner les lignes ci-dessous et les décommenter (Ctrl+/)
-      # - name: Test de santé
-      #   run: |
-      #     for i in $(seq 1 12); do
-      #       curl -fsS --max-time 5 "http://$SSH_HOST/health" && exit 0
-      #       sleep 5
-      #     done
-      #     echo "L'application ne répond pas"
-      #     exit 1
+      - name: Test de santé
+        run: |
+          for i in $(seq 1 12); do
+            curl -fsS --max-time 5 "http://$SSH_HOST/health" && exit 0
+            sleep 5
+          done
+          echo "L'application ne répond pas"
+          exit 1
