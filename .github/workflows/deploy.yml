@@ -1,13 +1,16 @@
 name: CI-CD
 
-# TODO 1 : déclencher aussi le workflow à chaque push sur la branche main
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # TODO 2 : donner à ce job les permissions "contents: read" et "packages: write"
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
@@ -15,24 +18,56 @@ jobs:
       - name: Nom d'image en minuscules
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-      # TODO 3 : se connecter à ghcr.io avec docker/login-action@v3
-      #          (utilisateur : github.actor ; mot de passe : secrets.GITHUB_TOKEN)
+      - name: Connexion à ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO 4 : construire et publier l'image avec docker/build-push-action@v6
-      #          - tags : <IMAGE>:<SHA du commit> et <IMAGE>:latest
-      #          - argument de build APP_VERSION = SHA du commit
+      - name: Construire et publier l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
 
   deploy:
-    # TODO 5 : ne lancer ce job qu'après la réussite du job build-and-push
+    needs: build-and-push
     runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
     steps:
       - name: Nom d'image en minuscules
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-      # TODO 6 : préparer la connexion SSH
-      #          - écrire la clé du secret SSH_KEY dans ~/.ssh/id_deploy (droits 600)
-      #          - ajouter l'hôte à known_hosts avec ssh-keyscan
+      - name: Préparer la connexion SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
-      # TODO 7 : se connecter à la VM (secrets SSH_USER et SSH_HOST) et y exécuter :
-      #          docker pull, suppression de l'ancien conteneur "webapp",
-      #          docker run -d --name webapp --restart unless-stopped -p 80:5000 <image>:<sha>
+      - name: Déployer sur la VM
+        run: |
+          ssh -i ~/.ssh/id_deploy "$SSH_USER@$SSH_HOST" "
+            docker pull $IMAGE:$GITHUB_SHA &&
+            (docker rm -f webapp || true) &&
+            docker run -d --name webapp --restart unless-stopped -p 80:5000 $IMAGE:$GITHUB_SHA
+          "
+
+      # Exercice 6.5 : sélectionner les lignes ci-dessous et les décommenter (Ctrl+/)
+      # - name: Test de santé
+      #   run: |
+      #     for i in $(seq 1 12); do
+      #       curl -fsS --max-time 5 "http://$SSH_HOST/health" && exit 0
+      #       sleep 5
+      #     done
+      #     echo "L'application ne répond pas"
+      #     exit 1
