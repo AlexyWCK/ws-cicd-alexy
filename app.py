@@ -3,7 +3,7 @@ import socket
 
 from flask import Flask, jsonify
 
-app = Flask(__name__)
+app = Flask(__name__
 
 # Message affiché sur la page d'accueil : à modifier pendant le workshop
 MESSAGE = "Bonjour Alexy depuis mon pipeline !"
